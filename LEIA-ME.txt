@@ -1,0 +1,21 @@
+CARTUCHO - emulador de Super Nintendo no navegador
+
+TESTAR NO PC
+  Abra o terminal nesta pasta e rode:  python -m http.server 8000
+  Acesse http://localhost:8000   (nao abra o index.html com duplo clique)
+
+CATALOGO AUTOMATICO
+  1. Coloque os jogos na pasta games/
+  2. Rode gerar-catalogo.bat (ou python gerar-catalogo.py) para atualizar games/games.json
+  3. Envie tudo para a hospedagem. No GitHub, a Action em .github/workflows
+     gera o games.json sozinha quando voce sobe arquivos em games/.
+  Obs.: hospedagens estaticas nao listam pastas, por isso o games.json e necessario.
+  O GitHub limita arquivos a 100 MB (ROMs de SNES sao pequenas, ate ~6 MB).
+
+LICENCAS
+  EmulatorJS (GPL-3.0) e snes9x (uso nao comercial) estao em emulator/.
+  Mantenha LICENSE-EmulatorJS.txt. Coloque no catalogo so jogos que voce pode distribuir.
+
+SAVE AUTOMATICO
+  O jogo salva sozinho a cada 10 segundos e ao sair, e volta de onde a pessoa parou.
+  Os saves ficam no navegador de cada pessoa (nao no seu servidor).

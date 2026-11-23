@@ -1,0 +1,4 @@
+Coloque aqui os jogos (.sfc, .smc, .swc, .fig ou .zip) que aparecem no catalogo do site.
+Depois rode gerar-catalogo.bat (Windows) ou: python3 gerar-catalogo.py
+No GitHub, o catalogo e atualizado sozinho quando voce envia arquivos para esta pasta.
+Coloque somente jogos que voce tem o direito de distribuir.
