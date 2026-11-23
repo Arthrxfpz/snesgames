@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cartucho · Super Nintendo no navegador</title>
+<style>
+:root{--bg:#0e0e16;--s1:#171724;--s2:#20202f;--s3:#2b2b3d;--line:#33334a;--text:#f1f0f8;--muted:#9a99b0;--acc:#8b7bff;--red:#e5484d;--yellow:#f5c542;--green:#3dbb74;--blue:#4d7cf0;--r:16px}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{background:radial-gradient(1200px 500px at 70% -10%,#241e4a55,transparent),var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.5}
+button,input{font:inherit;color:inherit}button{cursor:pointer}
+:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+.hide{display:none!important}
+.btn{background:var(--s2);border:1px solid var(--line);border-radius:12px;padding:8px 14px;transition:.15s}
+.btn:hover{background:var(--s3);border-color:var(--acc)}
+.btn.pri{background:var(--acc);border-color:var(--acc);color:#12102a;font-weight:600}
+.btn.danger:hover{border-color:var(--red)}
+/* topo */
+.top{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:14px;padding:12px 24px;background:#0e0e16cc;backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:1.25rem;letter-spacing:-.01em;white-space:nowrap}
+.dots{display:grid;grid-template-columns:repeat(2,9px);gap:3px}.dots i{width:9px;height:9px;border-radius:50%;display:block}
+.dots i:nth-child(1){background:var(--blue)}.dots i:nth-child(2){background:var(--red)}.dots i:nth-child(3){background:var(--green)}.dots i:nth-child(4){background:var(--yellow)}
+.search{flex:1;max-width:560px;margin:0 auto;position:relative}
+.search input{width:100%;background:var(--s1);border:1px solid var(--line);border-radius:999px;padding:10px 44px 10px 44px}
+.search input:focus{border-color:var(--acc);outline:none;box-shadow:0 0 0 3px #8b7bff33}
+.search svg{position:absolute;left:15px;top:50%;transform:translateY(-50%);width:18px;height:18px;color:var(--muted)}
+.search kbd{position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:.75rem;color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:0 6px}
+.pill{display:inline-flex;align-items:center;gap:8px;background:var(--s1);border:1px solid var(--line);border-radius:999px;padding:7px 14px;font-size:.85rem;white-space:nowrap;max-width:210px;overflow:hidden;text-overflow:ellipsis}
+.pill:before{content:"";width:9px;height:9px;border-radius:50%;background:#6a6980;flex:none}
+.pill.on:before{background:var(--green);box-shadow:0 0 8px var(--green)}
+.pill.on{border-color:#3dbb7466}
+/* home */
+#home{max-width:1180px;margin:0 auto;padding:30px 24px 70px}
+.hero h1{font-size:clamp(1.7rem,4vw,2.5rem);letter-spacing:-.02em;margin:0 0 4px}.hero p{margin:0;color:var(--muted)}
+.chips{display:flex;gap:8px;margin:22px 0 6px;flex-wrap:wrap}
+.chip{background:var(--s1);border:1px solid var(--line);border-radius:999px;padding:6px 16px;font-size:.9rem}
+.chip.on{background:var(--acc);border-color:var(--acc);color:#12102a;font-weight:600}
+h2{display:flex;align-items:baseline;gap:10px;font-size:1.1rem;margin:30px 0 14px}h2 small{color:var(--muted);font-weight:400;font-size:.85rem}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:18px}
+.card{position:relative;background:var(--s1);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;cursor:pointer;text-align:left;padding:0;transition:transform .18s,border-color .18s,box-shadow .18s}
+.card:hover,.card:focus-visible{transform:translateY(-4px);border-color:var(--acc);box-shadow:0 14px 30px #0008}
+.cv{height:128px;display:flex;align-items:center;justify-content:center;font-size:2.8rem;font-weight:800;color:#fff9;position:relative}
+.cv:after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,#0000 0 3px,#0000001c 3px 4px)}
+.go{position:absolute;right:10px;bottom:10px;z-index:1;width:38px;height:38px;border-radius:50%;background:var(--acc);color:#12102a;display:grid;place-items:center;opacity:0;transform:translateY(6px);transition:.18s}
+.card:hover .go,.card:focus-visible .go{opacity:1;transform:none}
+.inf{padding:12px 14px}.nm{font-weight:650;font-size:.95rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.sb{color:var(--muted);font-size:.8rem}
+.rm{position:absolute;top:8px;right:8px;z-index:2;background:#000b;border:0;border-radius:8px;width:28px;height:28px;opacity:0;transition:.15s}
+.card:hover .rm,.rm:focus-visible{opacity:1}.rm:hover{background:var(--red)}
+.add{border-style:dashed;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:196px;color:var(--muted);gap:6px;font-weight:600}
+.add b{font-size:2rem;color:var(--acc);line-height:1}
+.empty{color:var(--muted);background:var(--s1);border:1px dashed var(--line);border-radius:var(--r);padding:22px;grid-column:1/-1;text-align:center;font-size:.92rem}
+.legal{color:var(--muted);font-size:.8rem;text-align:center;margin-top:44px}
+#drop{position:fixed;inset:0;z-index:200;background:#0e0e16e8;display:grid;place-items:center;font-size:1.5rem;font-weight:700;border:4px dashed var(--acc);margin:12px;border-radius:24px}
+/* player */
+#player{display:flex;flex-direction:column;height:100vh;height:100dvh}
+.bar{display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--s1);border-bottom:1px solid var(--line);flex-wrap:wrap}
+.bar .t{font-weight:700;flex:1;min-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#stage{flex:1;min-height:0;background:#000}#game{width:100%;height:100%}
+#toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:var(--s3);border:1px solid var(--acc);border-radius:12px;padding:10px 20px;z-index:99999;transition:opacity .25s;pointer-events:none;max-width:90vw}
+/* modais */
+.ov{position:fixed;inset:0;background:#000b;backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:9999;padding:16px}
+.modal{background:var(--s1);border:1px solid var(--line);border-radius:20px;width:100%;max-width:680px;max-height:92vh;overflow:auto;padding:22px}
+.modal h3{margin:0 0 4px;font-size:1.25rem}.modal p{margin:0 0 14px;color:var(--muted);font-size:.9rem}
+.foot{display:flex;gap:8px;justify-content:space-between;margin-top:16px;flex-wrap:wrap}
+.pad{background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:10px;margin-bottom:14px;text-align:center}
+.pad svg{width:100%;max-width:340px;height:auto}.pad .st{color:var(--muted);font-size:.85rem}
+#pad [data-k]{transition:.06s}#pad [data-k].on{filter:brightness(1.7) drop-shadow(0 0 6px #fff);stroke:#fff;stroke-width:2}
+.ctl{display:grid;grid-template-columns:1fr auto auto;gap:7px 10px;align-items:center}
+.ctl .hd{color:var(--muted);font-size:.8rem;text-align:center}
+.badge{display:inline-block;min-width:54px;text-align:center;border-radius:8px;padding:1px 10px;font-weight:700;color:#fff}
+.key{min-width:104px;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:5px 10px;font-size:.88rem}
+.key:hover{border-color:var(--acc)}.key.wait{border-color:var(--yellow);color:var(--yellow)}.key.dup{border-color:var(--red)}
+.slots{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:560px){.slots{grid-template-columns:1fr}.top{flex-wrap:wrap;padding:10px 14px}.search{order:5;flex-basis:100%;max-width:none}.pill{max-width:140px}}
+.sl{background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:10px;cursor:pointer}.sl.cur{border-color:var(--acc)}
+.sl .th{aspect-ratio:8/7;background:#000;border-radius:8px;display:grid;place-items:center;color:var(--muted);font-size:.85rem;overflow:hidden;margin-bottom:8px}
+.sl .th img{width:100%;height:100%;object-fit:cover;image-rendering:pixelated}
+.sl .dt{font-size:.8rem;color:var(--muted);margin-bottom:8px}.sl .ac{display:flex;gap:6px}.sl .ac .btn{flex:1;padding:5px}
+.hint{font-size:.84rem;color:var(--muted);margin-top:12px}
+.cv img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;image-rendering:pixelated}
+.now{margin-top:6px;font-size:.9rem;color:var(--muted)}.now b{display:inline-block;min-width:54px;padding:2px 12px;border-radius:10px;background:var(--s3);color:var(--text);font-size:1.15rem;transition:.12s}
+.now b.pop{background:var(--acc);color:#12102a;transform:scale(1.15)}
+.chk{display:flex;gap:8px;align-items:center;margin:0 0 14px;font-size:.92rem}.chk input{width:18px;height:18px;accent-color:var(--acc)}
+kbd{background:var(--bg);border:1px solid var(--line);border-radius:5px;padding:0 6px}
+</style>
+</head>
+<body>
+
+<section id="home">
+  <header class="top" style="margin:-30px -24px 28px">
+    <div class="logo"><span class="dots"><i></i><i></i><i></i><i></i></span>Cartucho</div>
+    <label class="search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="q" type="search" placeholder="Buscar jogo…" autocomplete="off" aria-label="Buscar jogo">
+      <kbd>/</kbd>
+    </label>
+    <button class="pill" data-open="ovCtl" title="Controles">Sem controle</button>
+    <button class="btn" data-open="ovCtl">Controles</button>
+  </header>
+
+  <div class="hero"><h1>Escolha um jogo</h1><p id="count">Carregando…</p></div>
+  <div class="chips" id="chips">
+    <button class="chip on" data-t="all">Todos</button><button class="chip" data-t="cat">Catálogo</button><button class="chip" data-t="mine">Meus jogos</button>
+  </div>
+
+  <section id="secCat"><h2>Catálogo <small id="nCat"></small></h2><div class="grid" id="gCat"></div></section>
+  <section id="secMine"><h2>Meus jogos <small id="nMine"></small></h2><div class="grid" id="gMine"></div></section>
+  <input id="file" type="file" accept=".sfc,.smc,.swc,.fig,.zip" multiple class="hide">
+  <p class="legal">Use apenas jogos que você tem o direito de usar. Os jogos que você adiciona ficam só no seu navegador.</p>
+</section>
+
+<div id="drop" class="hide">Solte a ROM para adicionar</div>
+
+<section id="player" class="hide">
+  <div class="bar">
+    <button class="btn" id="bBack">‹ Jogos</button>
+    <div class="t" id="title"></div>
+    <button class="pill" data-open="ovCtl">Sem controle</button>
+    <button class="btn" id="bSave">Saves</button>
+    <button class="btn" data-open="ovCtl">Controles</button>
+    <button class="btn danger" id="bRestart">Recomeçar</button>
+  </div>
+  <div id="stage"><div id="game"></div></div>
+</section>
+
+<div id="toast" class="hide" role="status"></div>
+
+<div class="ov hide" id="ovCtl"><div class="modal" role="dialog" aria-labelledby="hCtl">
+  <h3 id="hCtl">Controles</h3>
+  <p><b>Testar:</b> aperte um botão do controle e ele acende aqui. <b>Mudar:</b> clique em uma tecla ou botão da lista e aperte o novo (Esc cancela).</p>
+  <div class="pad" id="pad">
+    <svg viewBox="0 0 360 190" aria-hidden="true">
+      <rect data-k="10" x="36" y="22" width="84" height="20" rx="9" fill="#8a879c"/><rect data-k="11" x="240" y="22" width="84" height="20" rx="9" fill="#8a879c"/>
+      <rect x="12" y="38" width="336" height="130" rx="62" fill="#4a475c"/><rect x="26" y="48" width="308" height="110" rx="52" fill="#5b586f"/>
+      <rect data-k="4" x="68" y="68" width="26" height="30" fill="#2b2a38"/><rect data-k="5" x="68" y="104" width="26" height="30" fill="#2b2a38"/>
+      <rect data-k="6" x="40" y="96" width="30" height="26" fill="#2b2a38"/><rect data-k="7" x="92" y="96" width="30" height="26" fill="#2b2a38"/><rect x="68" y="96" width="26" height="26" fill="#2b2a38"/>
+      <rect data-k="2" x="142" y="108" width="34" height="12" rx="6" transform="rotate(-25 159 114)" fill="#2b2a38"/><rect data-k="3" x="186" y="108" width="34" height="12" rx="6" transform="rotate(-25 203 114)" fill="#2b2a38"/>
+      <circle data-k="1" cx="248" cy="104" r="15" fill="#3dbb74"/><circle data-k="9" cx="278" cy="78" r="15" fill="#4d7cf0"/>
+      <circle data-k="8" cx="308" cy="104" r="15" fill="#e5484d"/><circle data-k="0" cx="278" cy="130" r="15" fill="#f5c542"/>
+    </svg>
+    <div class="st" id="padSt">Nenhum controle detectado. Conecte e aperte qualquer botão.</div>
+    <div class="now">Você apertou: <b id="padNow">–</b></div>
+  </div>
+  <div class="ctl" id="ctlList"></div>
+  <p class="hint">Dica: o teclado e o controle funcionam ao mesmo tempo. No celular, os botões aparecem na tela.</p>
+  <div class="foot"><button class="btn danger" id="ctlReset">Restaurar padrão</button><button class="btn pri" id="ctlClose">Pronto</button></div>
+</div></div>
+
+<div class="ov hide" id="ovSave"><div class="modal" role="dialog" aria-labelledby="hSave">
+  <h3 id="hSave">Saves</h3>
+  <p><b>Seu jogo já é salvo sozinho</b> e volta de onde você parou. Os espaços abaixo são extras, para guardar um momento específico (por exemplo, antes de um chefe). Atalhos: <kbd>F2</kbd> salva e <kbd>F4</kbd> carrega no espaço marcado.</p>
+  <label class="chk"><input type="checkbox" id="resumeChk"> Continuar de onde parei ao abrir o jogo</label>
+  <div class="slots" id="slotList"></div>
+  <p class="hint">Os saves ficam neste navegador. Se você limpar os dados do navegador, eles somem: use "Exportar" para guardar um backup.</p>
+  <div class="foot"><span><button class="btn" id="svExp">Exportar</button> <button class="btn" id="svImp">Importar</button></span><button class="btn pri" id="svClose">Fechar</button></div>
+  <input type="file" id="impFile" class="hide" accept=".json">
+</div></div>
+
+<script>
+/* ---------- banco local ---------- */
+const DB=(()=>{const open=()=>new Promise((res,rej)=>{const r=indexedDB.open('cartucho',2);
+  r.onupgradeneeded=()=>{const d=r.result;[['roms','id'],['states','key'],['meta','id']].forEach(([n,k])=>{if(!d.objectStoreNames.contains(n))d.createObjectStore(n,{keyPath:k})})};
+  r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});
+  const run=async(s,m,fn)=>{const db=await open();return new Promise((res,rej)=>{const t=db.transaction(s,m),q=fn(t.objectStore(s));t.oncomplete=()=>res(q&&q.result);t.onerror=()=>rej(t.error)})};
+  return{put:(s,v)=>run(s,'readwrite',o=>o.put(v)),get:(s,k)=>run(s,'readonly',o=>o.get(k)),del:(s,k)=>run(s,'readwrite',o=>o.delete(k)),all:s=>run(s,'readonly',o=>o.getAll())}})();
+const $=id=>document.getElementById(id),SLOTS=4,EXT=['sfc','smc','swc','fig','zip'];
+let cur=null,slotSel=1,started=false,ready=false,tab='all',catalog=[],mine=[],meta={},fam='gen';
+const toast=m=>{const t=$('toast');t.textContent=m;t.classList.remove('hide');t.style.opacity=1;clearTimeout(toast.h);toast.h=setTimeout(()=>t.style.opacity=0,2400)};
+const hash=s=>{let h=2166136261;for(const c of s){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}return h>>>0};
+const clean=n=>n.replace(/\.[^.]+$/,'').replace(/\s*[\(\[][^\)\]]*[\)\]]/g,'').replace(/_+/g,' ').trim()||n;
+const norm=s=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+const em=()=>window.EJS_emulator;
+
+/* ---------- catálogo (pasta games/) ---------- */
+async function loadCatalog(){
+  const mk=(f,n,sz)=>({file:f,name:n||clean(f),size:sz||0,id:String(hash('cat:'+f))});
+  try{const r=await fetch('games/games.json',{cache:'no-cache'});if(r.ok){const j=await r.json();
+    return j.map(x=>typeof x==='string'?mk(x):mk(x.file,x.name,x.size)).filter(x=>EXT.includes(x.file.split('.').pop().toLowerCase()))}}catch(e){}
+  try{const r=await fetch('games/');if(r.ok){const t=await r.text();
+    return [...t.matchAll(/href="([^"?#\/][^"]*)"/g)].map(m=>decodeURIComponent(m[1])).filter(f=>EXT.includes(f.split('.').pop().toLowerCase())).map(f=>mk(f))}}catch(e){}
+  return [];
+}
+async function playCatalog(g){
+  toast('Baixando '+g.name+'…');
+  try{const r=await fetch('games/'+encodeURIComponent(g.file));if(!r.ok)throw 0;
+    play({id:g.id,name:g.name,blob:await r.blob(),catalog:true})}catch(e){toast('Não foi possível baixar este jogo')}
+}
+
+/* ---------- biblioteca local ---------- */
+async function addFiles(files){
+  for(const f of files){
+    if(!EXT.includes(f.name.split('.').pop().toLowerCase())){toast(`"${f.name}" não parece ser uma ROM de SNES`);continue}
+    const id=String(hash(f.name+f.size));
+    await DB.put('roms',{id,name:clean(f.name),size:f.size,blob:f,added:Date.now(),last:Date.now()});
+    if(files.length===1)return play(await DB.get('roms',id));
+  }
+  loadLocal();
+}
+function card({name,sub,id,onPlay,onRemove,thumb}){
+  const b=document.createElement('div');b.className='card';b.tabIndex=0;b.setAttribute('role','button');
+  const h=hash(id)%360;
+  b.innerHTML=`<div class="cv" style="background:linear-gradient(135deg,hsl(${h} 55% 34%),hsl(${(h+50)%360} 60% 20%))"><span></span><div class="go"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4v16l13-8z"/></svg></div></div><div class="inf"><div class="nm"></div><div class="sb"></div></div>`;
+  b.querySelector('.cv span').textContent=(name.match(/[A-Za-z0-9]/)||['?'])[0].toUpperCase();
+  const n=b.querySelector('.nm');n.textContent=name;n.title=name;b.querySelector('.sb').textContent=sub;
+  if(thumb){const im=new Image();im.src=thumb;im.alt='';b.querySelector('.cv').prepend(im);b.querySelector('.cv span').hidden=true}
+  b.onclick=onPlay;b.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();onPlay()}};
+  if(onRemove){const x=document.createElement('button');x.className='rm';x.textContent='✕';x.title='Remover jogo';x.setAttribute('aria-label','Remover '+name);
+    x.onclick=e=>{e.stopPropagation();onRemove()};b.appendChild(x)}
+  return b;
+}
+async function loadLocal(){mine=(await DB.all('roms')).sort((a,b)=>b.last-a.last);meta=Object.fromEntries((await DB.all('meta')).map(m=>[m.id,m]));refresh()}
+const mt=id=>{const m=meta[id];if(!m)return{};if(m.thumb&&!m.url)m.url=URL.createObjectURL(m.thumb);return{thumb:m.url,resume:'▶ Continuar · '+new Date(m.time).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})}};
+function refresh(){
+  const q=norm($('q').value.trim()),f=l=>l.filter(x=>norm(x.name).includes(q));
+  const c=f(catalog),m=f(mine),gC=$('gCat'),gM=$('gMine');gC.textContent='';gM.textContent='';
+  c.forEach(g=>{const t=mt(g.id);gC.appendChild(card({name:g.name,sub:t.resume||(g.size?(g.size/1048576).toFixed(1)+' MB':'Jogo do catálogo'),thumb:t.thumb,id:'c'+g.id,onPlay:()=>playCatalog(g)}))});
+  const add=document.createElement('button');add.className='card add';add.innerHTML='<b>+</b>Adicionar ROM';add.onclick=()=>$('file').click();
+  if(!q)gM.appendChild(add);
+  m.forEach(r=>{const t=mt(r.id);gM.appendChild(card({name:r.name,sub:t.resume||(r.size/1048576).toFixed(1)+' MB',thumb:t.thumb,id:r.id,onPlay:()=>play(r),
+    onRemove:async()=>{if(!confirm(`Remover "${r.name}" e os saves dele deste navegador?`))return;await DB.del('roms',r.id);await DB.del('meta',r.id);await DB.del('states',r.id+':auto');for(let i=1;i<=SLOTS;i++)await DB.del('states',r.id+':'+i);loadLocal()}}))});
+  const none=t=>{const e=document.createElement('div');e.className='empty';e.textContent=t;return e};
+  if(!c.length)gC.appendChild(none(q?'Nenhum jogo do catálogo com esse nome.':'O catálogo está vazio. Coloque jogos na pasta "games" e rode o gerador de catálogo.'));
+  if(!m.length&&q)gM.appendChild(none('Nenhum dos seus jogos com esse nome.'));
+  $('nCat').textContent=c.length?c.length+(c.length>1?' jogos':' jogo'):'';$('nMine').textContent=m.length?m.length+(m.length>1?' jogos':' jogo'):'';
+  $('secCat').classList.toggle('hide',tab==='mine');$('secMine').classList.toggle('hide',tab==='cat');
+  const tot=c.length+m.length;$('count').textContent=q?`${tot} resultado${tot===1?'':'s'} para "${$('q').value.trim()}"`:`${catalog.length+mine.length} jogos disponíveis`;
+}
+$('q').oninput=refresh;
+$('chips').onclick=e=>{const c=e.target.closest('.chip');if(!c)return;tab=c.dataset.t;[...$('chips').children].forEach(x=>x.classList.toggle('on',x===c));refresh()};
+$('file').onchange=e=>{addFiles([...e.target.files]);e.target.value=''};
+let dc=0;
+addEventListener('dragenter',e=>{if(started)return;e.preventDefault();dc++;$('drop').classList.remove('hide')});
+addEventListener('dragleave',()=>{if(--dc<=0){dc=0;$('drop').classList.add('hide')}});
+addEventListener('dragover',e=>e.preventDefault());
+addEventListener('drop',e=>{e.preventDefault();dc=0;$('drop').classList.add('hide');if(!started)addFiles([...e.dataTransfer.files])});
+
+/* ---------- controles: teclado + gamepad ---------- */
+// [índice EmulatorJS, rótulo, cor, keyCode, rótulo da tecla, botão do controle]
+const BTN=[[4,'↑','#6b6879',38,'↑',12],[5,'↓','#6b6879',40,'↓',13],[6,'←','#6b6879',37,'←',14],[7,'→','#6b6879',39,'→',15],
+ [8,'A','#e5484d',90,'Z',1],[0,'B','#f5c542',88,'X',0],[9,'X','#4d7cf0',65,'A',3],[1,'Y','#3dbb74',83,'S',2],
+ [10,'L','#8a879c',81,'Q',4],[11,'R','#8a879c',69,'E',5],[2,'Select','#6b6879',86,'V',8],[3,'Start','#6b6879',13,'Enter',9]];
+const PADN=['BUTTON_1','BUTTON_2','BUTTON_3','BUTTON_4','LEFT_TOP_SHOULDER','RIGHT_TOP_SHOULDER','LEFT_BOTTOM_SHOULDER','RIGHT_BOTTOM_SHOULDER','SELECT','START','LEFT_STICK','RIGHT_STICK','DPAD_UP','DPAD_DOWN','DPAD_LEFT','DPAD_RIGHT'];
+const FAMS={xbox:'Xbox',ps:'PlayStation',nin:'Nintendo',gen:'Controle'};
+const XB=['A','B','X','Y','LB','RB','LT','RT','View','Menu','L3','R3','↑','↓','←','→'];
+const TAB={xbox:XB,gen:XB,ps:['✕','○','□','△','L1','R1','L2','R2','Share','Options','L3','R3','↑','↓','←','→'],nin:['B','A','Y','X','L','R','ZL','ZR','−','+','L3','R3','↑','↓','←','→']};
+const famOf=id=>/xbox|xinput|045e/i.test(id)?'xbox':/054c|playstation|dualshock|dualsense|wireless controller/i.test(id)?'ps':/057e|nintendo|pro controller|joy-?con/i.test(id)?'nin':'gen';
+const padLbl=i=>TAB[fam][i]||'Botão '+i;
+const defK=()=>Object.fromEntries(BTN.map(b=>[b[0],{code:b[3],label:b[4]}])),defP=()=>Object.fromEntries(BTN.map(b=>[b[0],b[5]]));
+const load=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))||d()}catch(e){return d()}};
+let keys=load('cartucho.keys',defK),pmap=load('cartucho.pad',defP);
+const persist=()=>{localStorage.setItem('cartucho.keys',JSON.stringify(keys));localStorage.setItem('cartucho.pad',JSON.stringify(pmap))};
+const keyLabel=e=>({' ':'Espaço',ArrowUp:'↑',ArrowDown:'↓',ArrowLeft:'←',ArrowRight:'→',Control:'Ctrl'}[e.key]||(e.key.length===1?e.key.toUpperCase():e.key));
+function ctrlMap(){const p={};BTN.forEach(b=>p[b[0]]={value:keys[b[0]].code,value2:PADN[pmap[b[0]]]});return{0:p,1:{},2:{},3:{}}}
+function applyKeys(){const e=em();if(!e||!e.controls)return;const m=ctrlMap()[0];for(const i in m)e.controls[0][i]=m[i]}
+let waiting=null;
+function renderCtl(){
+  const L=$('ctlList');L.innerHTML='<span></span><span class="hd">Teclado</span><span class="hd">Controle</span>';
+  BTN.forEach(b=>{
+    const i=b[0],bd=document.createElement('span'),k=document.createElement('button'),p=document.createElement('button');
+    bd.className='badge';bd.textContent=b[1];bd.style.background=b[2];
+    k.className='key';k.textContent=keys[i].label;p.className='key';p.textContent=padLbl(pmap[i]);
+    if(BTN.some(o=>o[0]!==i&&keys[o[0]].code===keys[i].code))k.classList.add('dup');
+    if(BTN.some(o=>o[0]!==i&&pmap[o[0]]===pmap[i]))p.classList.add('dup');
+    k.onclick=()=>{waiting={t:'k',i};k.textContent='Aperte uma tecla…';k.classList.add('wait')};
+    p.onclick=()=>{waiting={t:'p',i};p.textContent='Aperte o botão…';p.classList.add('wait')};
+    L.append(bd,k,p);
+  });
+}
+const modalOpen=()=>!$('ovCtl').classList.contains('hide')||!$('ovSave').classList.contains('hide');
+addEventListener('keydown',e=>{
+  const open=modalOpen();if(open)e.stopImmediatePropagation();
+  if(waiting){e.preventDefault();if(waiting.t==='k'&&e.key!=='Escape'){keys[waiting.i]={code:e.keyCode,label:keyLabel(e)};persist();applyKeys()}
+    waiting=null;renderCtl();return}
+  if(open){if(e.key==='Escape')closeModals();return}
+  if(document.activeElement===$('q')){if(e.key==='Escape'){$('q').value='';refresh();$('q').blur()}return}
+  if(!started){if(e.key==='/'){e.preventDefault();$('q').focus()}return}
+  if(e.key==='F2'){e.preventDefault();stateSave(slotSel)}
+  if(e.key==='F4'){e.preventDefault();stateLoad(slotSel)}
+},true);
+$('ctlReset').onclick=()=>{keys=defK();pmap=defP();persist();applyKeys();renderCtl()};
+
+/* gamepad: detecção ao vivo, teste visual, remapeamento e navegação no site */
+let prev=[],prevDir={},lastNav=0;
+const pillEls=()=>document.querySelectorAll('.pill');
+let lastPill='',padsOn=false,flashT=0;
+const pillSet=t=>pillEls().forEach(p=>p.textContent=t),pillIdle=()=>pillSet(padsOn?FAMS[fam]+' conectado':'Sem controle');
+function updatePill(ps){
+  const id=ps.length?ps[0].id:'',k=ps.length+'|'+id;if(k===lastPill)return;lastPill=k;
+  padsOn=!!ps.length;fam=padsOn?famOf(id):'gen';
+  pillEls().forEach(p=>{p.classList.toggle('on',padsOn);p.title=padsOn?id:'Aperte um botão do controle para detectar'});pillIdle();
+  const n=id.replace(/\(.*?\)|Vendor:.*/gi,'').trim()||'Controle';
+  $('padSt').textContent=padsOn?`${FAMS[fam]==='Controle'?'Controle':'Controle '+FAMS[fam]} detectado (${n}). Aperte um botão para testar.`:'Nenhum controle detectado. Conecte e aperte qualquer botão.';
+  if(!$('ovCtl').classList.contains('hide'))renderCtl();
+}
+function flashBtn(i){const l=padLbl(i);pillSet(`${FAMS[fam]} · ${l}`);const n=$('padNow');n.textContent=l;n.classList.add('pop');clearTimeout(flashT);flashT=setTimeout(()=>{pillIdle();n.classList.remove('pop')},900)}
+addEventListener('gamepadconnected',e=>toast('Controle conectado: '+(e.gamepad.id.split('(')[0].trim()||'controle')));
+addEventListener('gamepaddisconnected',()=>toast('Controle desconectado'));
+function dirOf(d){const e=[...document.querySelectorAll('#home .card,#home .chip,#home input,#home .btn,#home .pill')].filter(x=>x.offsetParent);
+  const a=document.activeElement;if(!e.includes(a)){(e.find(x=>x.classList.contains('card'))||e[0]).focus();return}
+  const r=a.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;let best=null,bs=1e9;
+  e.forEach(x=>{if(x===a)return;const q=x.getBoundingClientRect(),dx=q.left+q.width/2-cx,dy=q.top+q.height/2-cy;
+    const ok=d==='L'?dx<-8&&Math.abs(dy)<r.height:d==='R'?dx>8&&Math.abs(dy)<r.height:d==='U'?dy<-8:dy>8;
+    if(!ok)return;const s=(d==='L'||d==='R')?Math.abs(dx)+Math.abs(dy)*3:Math.abs(dy)+Math.abs(dx)*3;if(s<bs){bs=s;best=x}});
+  if(best){best.focus();best.scrollIntoView({block:'center',behavior:'smooth'})}}
+function loop(){
+  const ps=[...(navigator.getGamepads?navigator.getGamepads():[])].filter(Boolean);updatePill(ps);
+  const p=Array(17).fill(false);let ax=0,ay=0;
+  ps.forEach(g=>{g.buttons.forEach((b,i)=>{if(b.pressed&&i<16)p[i]=true});ax=Math.abs(g.axes[0]||0)>Math.abs(ax)?g.axes[0]:ax;ay=Math.abs(g.axes[1]||0)>Math.abs(ay)?g.axes[1]:ay});
+  const vd={14:p[14]||ax<-.6,15:p[15]||ax>.6,12:p[12]||ay<-.6,13:p[13]||ay>.6};
+  Object.assign(p,vd);
+  const edge=i=>p[i]&&!prev[i];
+  const nw=[...Array(16).keys()].filter(edge);if(nw.length)flashBtn(nw[0]);
+  if(!$('ovCtl').classList.contains('hide')){
+    const on=new Set();p.forEach((v,i)=>{if(v)BTN.forEach(b=>{if(pmap[b[0]]===i)on.add(b[0])})});
+    document.querySelectorAll('#pad [data-k]').forEach(el=>el.classList.toggle('on',on.has(+el.dataset.k)));
+    if(waiting&&waiting.t==='p'){const i=[...Array(16).keys()].find(edge);if(i!==undefined){pmap[waiting.i]=i;persist();applyKeys();waiting=null;renderCtl()}}
+  }else if(!started&&!modalOpen()&&document.activeElement!==$('q')){
+    [[14,'L'],[15,'R'],[12,'U'],[13,'D']].forEach(([i,d])=>{if(edge(i))dirOf(d)});
+    if(edge(0)&&document.activeElement&&document.activeElement.click&&document.activeElement!==document.body)document.activeElement.click();
+    if(edge(3))$('q').focus();
+  }
+  prev=p;requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+/* ---------- saves ---------- */
+async function stateSave(n){
+  try{const state=em().gameManager.getState();let thumb=null;
+    try{thumb=(await em().takeScreenshot('canvas','jpeg',0.7)).blob}catch(e){}
+    await DB.put('states',{key:cur.id+':'+n,data:state,thumb,time:Date.now()});em().gameManager.saveSaveFiles();toast(`Salvo no espaço ${n}`);renderSlots()}
+  catch(e){console.error(e);toast('Não foi possível salvar agora')}
+}
+async function stateLoad(n){
+  const s=await DB.get('states',cur.id+':'+n);if(!s){toast(`Espaço ${n} está vazio`);return}
+  try{em().gameManager.loadState(new Uint8Array(s.data));toast(`Carregado do espaço ${n}`);closeModals()}catch(e){toast('Não foi possível carregar')}
+}
+async function renderSlots(){
+  const L=$('slotList');L.textContent='';
+  for(let n=1;n<=SLOTS;n++){
+    const s=await DB.get('states',cur.id+':'+n),d=document.createElement('div');d.className='sl'+(n===slotSel?' cur':'');
+    d.innerHTML='<div class="th"></div><div class="dt"></div><div class="ac"><button class="btn sv">Salvar</button><button class="btn ld">Carregar</button><button class="btn x" title="Apagar">✕</button></div>';
+    const th=d.querySelector('.th');if(s&&s.thumb){const im=new Image();im.src=URL.createObjectURL(s.thumb);th.appendChild(im)}else th.textContent=s?'Sem imagem':'Vazio';
+    d.querySelector('.dt').textContent=`Espaço ${n}`+(s?' · '+new Date(s.time).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'');
+    d.onclick=()=>{slotSel=n;[...L.children].forEach((c,i)=>c.classList.toggle('cur',i+1===n))};
+    d.querySelector('.sv').onclick=async()=>{slotSel=n;await stateSave(n)};
+    d.querySelector('.ld').onclick=()=>{slotSel=n;stateLoad(n)};
+    d.querySelector('.x').onclick=async e=>{e.stopPropagation();if(s&&confirm(`Apagar o espaço ${n}?`)){await DB.del('states',cur.id+':'+n);renderSlots()}};
+    L.appendChild(d);
+  }
+}
+$('svExp').onclick=async()=>{
+  const all=(await DB.all('states')).filter(s=>s.key.startsWith(cur.id+':'));
+  const b64=u=>{let s='';for(let i=0;i<u.length;i+=32768)s+=String.fromCharCode.apply(null,u.subarray(i,i+32768));return btoa(s)};
+  const out={game:cur.name,states:all.map(s=>({key:s.key,time:s.time,data:b64(new Uint8Array(s.data))}))};
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(out)],{type:'application/json'}));a.download=cur.name+'-saves.json';a.click();toast('Backup exportado');
+};
+$('svImp').onclick=()=>$('impFile').click();
+$('impFile').onchange=async e=>{
+  try{const j=JSON.parse(await e.target.files[0].text());
+    for(const s of j.states){const bin=atob(s.data),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);
+      await DB.put('states',{key:cur.id+':'+s.key.split(':')[1],data:u,thumb:null,time:s.time})}
+    toast('Saves importados');renderSlots()}catch(err){toast('Arquivo de backup inválido')}
+  e.target.value='';
+};
+
+/* ---------- modais e player ---------- */
+function openModal(id){if(id==='ovSave')$('resumeChk').checked=resumeOn();if(started&&em()&&em().pause)em().pause();$(id).classList.remove('hide');id==='ovCtl'?renderCtl():renderSlots()}
+function closeModals(){waiting=null;$('ovCtl').classList.add('hide');$('ovSave').classList.add('hide');if(started&&em()&&em().play)em().play()}
+document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openModal(b.dataset.open));
+$('bSave').onclick=()=>openModal('ovSave');$('ctlClose').onclick=closeModals;$('svClose').onclick=closeModals;
+[$('ovCtl'),$('ovSave')].forEach(o=>o.addEventListener('mousedown',e=>{if(e.target===o)closeModals()}));
+let thumbAt=0,thumbBlob=null,saving=false;
+async function autoSave(force){
+  if(!started||!ready||saving||(!force&&modalOpen()))return;saving=true;
+  try{const data=em().gameManager.getState();
+    if(!thumbBlob||Date.now()-thumbAt>30000){try{thumbBlob=(await em().takeScreenshot('canvas','jpeg',0.6)).blob;thumbAt=Date.now()}catch(e){}}
+    const time=Date.now();await DB.put('states',{key:cur.id+':auto',data,thumb:thumbBlob,time});await DB.put('meta',{id:cur.id,thumb:thumbBlob,time});
+  }catch(e){}saving=false;
+}
+const resumeOn=()=>localStorage.getItem('cartucho.resume')!=='0';
+async function resume(){
+  const st=await DB.get('states',cur.id+':auto');
+  if(st&&resumeOn()){await new Promise(r=>setTimeout(r,900));try{em().gameManager.loadState(new Uint8Array(st.data));toast('Continuando de onde você parou')}catch(e){}}
+  else toast('Seu jogo é salvo sozinho a cada 10 segundos');
+  ready=true;
+}
+$('bBack').onclick=async()=>{await autoSave(true);try{em().gameManager.saveSaveFiles()}catch(e){}location.reload()};
+$('bRestart').onclick=async()=>{if(!confirm('Recomeçar do zero? O progresso automático será apagado (seus espaços de save continuam).'))return;
+  ready=false;await DB.del('states',cur.id+':auto');await DB.del('meta',cur.id);try{em().gameManager.restart()}catch(e){}ready=true;toast('Jogo reiniciado')};
+$('resumeChk').onchange=e=>localStorage.setItem('cartucho.resume',e.target.checked?'1':'0');
+const flush=()=>{try{if(started)em().gameManager.saveSaveFiles()}catch(e){}autoSave()};
+document.addEventListener('visibilitychange',()=>{if(document.hidden)flush()});addEventListener('pagehide',flush);setInterval(flush,30000);setInterval(()=>autoSave(),10000);
+
+async function play(rom){
+  if(started||cur)return;cur=rom;
+  if(!rom.catalog){rom.last=Date.now();DB.put('roms',rom)}
+  $('home').classList.add('hide');$('player').classList.remove('hide');$('title').textContent=rom.name;document.title=rom.name+' · Cartucho';
+  Object.assign(window,{EJS_player:'#game',EJS_core:'snes',EJS_gameName:rom.name,EJS_gameID:parseInt(rom.id),
+    EJS_gameUrl:URL.createObjectURL(rom.blob),EJS_pathtodata:'emulator/',EJS_DEBUG_XX:true,EJS_startOnLoaded:true,EJS_language:'pt-BR',EJS_disableLocalStorage:true,
+    EJS_defaultControls:ctrlMap(),
+    EJS_Buttons:{saveState:{visible:false},loadState:{visible:false},quickSave:{visible:false},quickLoad:{visible:false}},
+    EJS_onGameStart:()=>{started=true;applyKeys();resume()}});
+  const s=document.createElement('script');s.src='emulator/loader.js';
+  s.onerror=()=>toast('Não foi possível carregar o emulador');document.body.appendChild(s);
+}
+(async()=>{catalog=await loadCatalog();loadLocal()})();
+if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
